@@ -52,11 +52,13 @@ class ExportCommand extends Command
             return;
         }
 
+        $excludeLocales = explode(',', $this->option('exclude-locales'));
+
         if ( $group == '*' ) {
-            $this->manager->exportAllTranslations();
+            $this->manager->exportAllTranslations($excludeLocales);
         }
         else {
-            $this->manager->exportTranslations($group, $json);
+            $this->manager->exportTranslations($group, $json, $excludeLocales);
         }
 
         if (!is_null($group)) {
@@ -88,6 +90,7 @@ class ExportCommand extends Command
         return [
             ['json', 'J', InputOption::VALUE_NONE, 'Export anonymous strings to JSON'],
             ['all', 'A', InputOption::VALUE_NONE, 'Export all groups'],
+            ['exclude-locales', null, InputOption::VALUE_OPTIONAL, 'Comma-separated list of locales to exclude'],
         ];
     }
 }

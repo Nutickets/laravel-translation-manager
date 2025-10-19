@@ -250,7 +250,7 @@ class Manager
         }
     }
 
-    public function exportTranslations($group = null, $json = false)
+    public function exportTranslations($group = null, $json = false, ?array $excludedLocales = [])
     {
         $group = basename($group);
         $basePath = $this->app['path.lang'];
@@ -268,6 +268,7 @@ class Manager
 
                 $models = [];
                 Translation::ofTranslatedGroup($group)
+                    ->when(!empty($excludedLocales), fn ($q) => $q->whereNotIn('locale', $excludedLocales))
                     ->orderByGroupKeys(Arr::get($this->config, 'sort_keys', false))
                     ->chunkById(50000, function ($chunk) use (&$models) {
                         $models = array_merge($models, $chunk->all());
@@ -333,15 +334,15 @@ class Manager
         $this->events->dispatch(new TranslationsExportedEvent());
     }
 
-    public function exportAllTranslations()
+    public function exportAllTranslations(?array $excludedLocales = [])
     {
         $groups = Translation::whereNotNull('value')->selectDistinctGroup()->get('group');
 
         foreach ($groups as $group) {
             if ($group->group == self::JSON_GROUP) {
-                $this->exportTranslations(null, true);
+                $this->exportTranslations(null, true, $excludedLocales);
             } else {
-                $this->exportTranslations($group->group);
+                $this->exportTranslations($group->group, excludedLocales: $excludedLocales);
             }
         }
 
